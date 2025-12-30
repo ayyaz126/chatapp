@@ -1,19 +1,17 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-
-// DB + Redis import
-import { db } from "./config/db";
-import { redis } from "./config/redis";
-import { users } from "./db/schema/users.schema"; // ✅ Import schema
+import authRoutes from "./modules/auth/routes/auth.routes";
+import userRoutes from "./modules/users/routes/user.routes";
 
 const app = express();
 
+// ✅ Middleware
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
-// Health Check
+// ✅ Health Check
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "OK",
@@ -21,25 +19,8 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// Test DB & ORM connection
-app.get("/test-db", async (_req, res) => {
-  try {
-    const allUsers = await db.select().from(users).limit(1); // ✅ Use table object
-    res.json({ users: allUsers });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Test Redis connection
-app.get("/test-redis", async (_req, res) => {
-  try {
-    await redis.set("ping", "pong", "EX", 10);
-    const value = await redis.get("ping");
-    res.json({ value });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// ✅ Auth Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 export default app;
